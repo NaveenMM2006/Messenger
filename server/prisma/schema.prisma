@@ -8,11 +8,77 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  fullName   String
-  email      String   @unique
-  password   String
+  id          String   @id @default(uuid())
+  fullName    String
+  email       String   @unique
+  password    String
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  workspaces  WorkspaceMember[]
+  ownedSpaces Workspace[]
+  messages Message[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+
+  members     WorkspaceMember[]
+  channels Channel[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WorkspaceMember {
+  id          String    @id @default(uuid())
+
+  userId      String
+  workspaceId String
+
+  role        String    @default("MEMBER")
+
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, workspaceId])
+}
+
+model Channel {
+  id          String   @id @default(uuid())
+
+  name        String
+  description String?
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    Message[]
+
+  @@unique([workspaceId, name])
+}
+
+model Message {
+  id          String   @id @default(uuid())
+
+  content     String
+
+  senderId    String
+  sender      User @relation(fields: [senderId], references: [id])
+
+  channelId   String
+  channel     Channel @relation(fields: [channelId], references: [id])
+
+  createdAt   DateTime @default(now())
 }
